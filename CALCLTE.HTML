@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title> Calculator</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:#f2f2f2;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.calculator{
+    width:360px;
+    background:#222;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 0 20px rgba(0,0,0,.4);
+    transition:.3s;
+}
+
+.calculator.dark{
+    background:#f5f5f5;
+}
+
+#display{
+    width:100%;
+    height:70px;
+    border:none;
+    border-radius:10px;
+    margin-bottom:15px;
+    font-size:30px;
+    text-align:right;
+    padding:10px;
+    background:white;
+    color:black;
+}
+
+.calculator.dark #display{
+    background:#222;
+    color:white;
+}
+
+.buttons{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+}
+
+button{
+    height:60px;
+    border:none;
+    border-radius:10px;
+    font-size:22px;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:.85;
+}
+
+.operator{
+    background:orange;
+    color:white;
+}
+
+.equal{
+    background:blueviolet;
+    color:white;
+}
+
+.clear{
+    background:red;
+    color:white;
+}
+
+.toggle{
+    width:100%;
+    margin-top:20px;
+    height:60px;
+    border:none;
+    border-radius:10px;
+    background:#444;
+    color:white;
+    font-size:22px;
+    cursor:pointer;
+}
+
+.calculator.dark .toggle{
+    background:#ddd;
+    color:black;
+}
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="calculator" id="calculator">
+
+<input type="text" id="display" readonly>
+
+<div class="buttons">
+
+    <button class="clear" onclick="clearDisplay()">C</button>
+    <button onclick="deleteLast()">DEL</button>
+    <button onclick="add('%')">%</button>
+    <button class="operator" onclick="add('/')">÷</button>
+
+    <button onclick="add('7')">7</button>
+    <button onclick="add('8')">8</button>
+    <button onclick="add('9')">9</button>
+    <button class="operator" onclick="add('*')">×</button>
+
+    <button onclick="add('4')">4</button>
+    <button onclick="add('5')">5</button>
+    <button onclick="add('6')">6</button>
+    <button class="operator" onclick="add('-')">−</button>
+
+    <button onclick="add('1')">1</button>
+    <button onclick="add('2')">2</button>
+    <button onclick="add('3')">3</button>
+    <button class="operator" onclick="add('+')">+</button>
+
+    <button onclick="add('(')">(</button>
+    <button onclick="add(')')">)</button>
+    <button onclick="add('.')">.</button>
+    <button onclick="add('0')">0</button>
+
+    <button class="equal" style="grid-column:span 4;" onclick="calculate()">=</button>
+
+</div>
+
+<button class="toggle" onclick="toggleMode()">
+    🌙 Toggle Dark Mode
+</button>
+
+</div>
+<script>
+
+function add(value){
+    document.getElementById("display").value += value;
+}
+
+function clearDisplay(){
+    document.getElementById("display").value = "";
+}
+
+function deleteLast(){
+    let text = document.getElementById("display").value;
+    document.getElementById("display").value = text.slice(0,-1);
+}
+
+function calculate(){
+
+    let expression = document.getElementById("display").value;
+
+    try{
+        expression = expression.replace(/(\d)\(/g, "$1*(");
+        expression = expression.replace(/\)(\d)/g, ")*$1");
+        let answer = eval(expression);
+        document.getElementById("display").value = answer;
+        
+    }
+    catch{
+        document.getElementById("display").value = "Error";
+    }
+
+}
+
+function toggleMode(){
+    document.getElementById("calculator").classList.toggle("dark");
+}
+
+</script>
+
+</body>
+</html>
