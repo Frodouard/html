@@ -1,48 +1,75 @@
 <?php
-// config.php - Database connection and auto schema setup
-$host = 'localhost';
-$user = 'root';
-$pass = '';
-$db = 'customer_expense_management';
 
-$mysqli = new mysqli($host, $user, $pass);
-if ($mysqli->connect_error) {
-    die('Database connection failed: ' . $mysqli->connect_error);
-}
+declare(strict_types=1);
 
-$mysqli->query("CREATE DATABASE IF NOT EXISTS `{$db}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-$mysqli->select_db($db);
+error_reporting(E_ALL);
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+ini_set('error_log', __DIR__ . '/error.log');
 
-$mysqli->query("CREATE TABLE IF NOT EXISTS `users` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `username` VARCHAR(100) NOT NULL UNIQUE,
-    `password_hash` VARCHAR(255) NOT NULL,
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-$mysqli->query("CREATE TABLE IF NOT EXISTS `expenses` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `customer_name` VARCHAR(100) NOT NULL,
-    `customer_phone` VARCHAR(20) NOT NULL,
-    `expense_date` DATE NOT NULL,
-    `expense_description` TEXT NOT NULL,
-    `amount_spent` DECIMAL(10,2) NOT NULL,
-    `payment_method` ENUM('Cash','Mobile Money','Bank') NOT NULL,
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-$defaultPassword = 'admin123';
-$result = $mysqli->query("SELECT COUNT(*) AS total FROM users WHERE username='admin'");
-if ($result) {
-    $row = $result->fetch_assoc();
-    if ($row['total'] == 0) {
-        $passwordHash = password_hash($defaultPassword, PASSWORD_DEFAULT);
-        $stmt = $mysqli->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
-        if ($stmt) {
-            $userName = 'admin';
-            $stmt->bind_param('ss', $userName, $passwordHash);
-            $stmt->execute();
-            $stmt->close();
-        }
+set_error_handler(function (int $severity, string $message, string $file, int $line): bool {
+    if (!(error_reporting() & $severity)) {
+        return false;
     }
+
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+set_exception_handler(function (Throwable $exception): void {
+    error_log(sprintf(
+        "[%s] %s in %s on line %d\nStack trace:\n%s\n",
+        date('Y-m-d H:i:s'),
+        $exception->getMessage(),
+        $exception->getFile(),
+        $exception->getLine(),
+        $exception->getTraceAsString()
+    ));
+
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: text/html; charset=utf-8');
+    }
+
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Application Error</title></head><body style="font-family:Arial,Helvetica,sans-serif;padding:2rem;line-height:1.6;">';
+    echo '<h1>Application Error</h1>';
+    echo '<p>Something went wrong. Please try again later or contact support.</p>';
+    echo '</body></html>';
+    exit;
+});
+
+function render_error(string $message, int $statusCode = 500): void
+{
+    if (!headers_sent()) {
+        http_response_code($statusCode);
+        header('Content-Type: text/html; charset=utf-8');
+    }
+
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Error</title></head><body style="font-family:Arial,Helvetica,sans-serif;padding:2rem;line-height:1.6;">';
+    echo '<h1>Error</h1>';
+    echo '<p>' . htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</p>';
+    echo '<p><a href="javascript:history.back()">Go back</a></p>';
+    echo '</body></html>';
+    exit;
 }
+
+$host = "localhost";
+$username = "root";
+$password = "";
+$database = "electricity_system";
+
+$conn = new mysqli(
+    $host,
+    $username,
+    $password,
+    $database
+);
+
+if ($conn->connect_error) {
+    render_error("Database connection failed. Please contact support.");
+}
+
+$conn->set_charset("utf8mb4");
+
+?>
